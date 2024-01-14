@@ -238,3 +238,89 @@ terraform validate
 terraform plan
 terraform apply --auto-approve
 ```
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/354a157b-72f9-4eba-9f84-0acdf529ce8a)
+
+### To add NPM and Trivy taks on Github workflows
+
+This step is responsible for installing Node.js dependencies using npm and performing a security scan using Trivy on the files in the current directory and redirecting the results to a file named "trivyfs.txt". Trivy is a vulnerability scanner for containers and file systems.
+
+```
+name: To Build, Analyze and Scan
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - name: To Checkout the Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Build and Analyze with Sonarqube
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: NPM install dependency
+        run: npm install
+      - name: Trivy file scan
+        run: trivy fs . > trivyfs.txt
+```
+
+Once update the workflow then Github action has been triggered and my job has been succeeded.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/13e42084-821c-43bd-b9f9-f89158dd3970)
+
+### To add Docker stage
+
+First I have to create a Personal Access Token in Docker hub registry.
+
+Go to docker hub and click on your profile –> Account settings –> security –> New access token
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/9b6ae3ad-12b2-4c7b-9061-83fdba935bea)
+
+Go to my Repository -> candycrush -> Settings -> Secrets & Variables -> Actions -> New repository secret
+
+Add DOCKERHUB_TOKEN & DOCKERHUB_USERNAME
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/2b380310-ef97-4da7-b8ea-b965235b8278)
+
+### To add Docker stage to Github workflows
+
+```
+name: To Build, Analyze and Scan
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - name: To Checkout the Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Build and Analyze with Sonarqube
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: NPM install dependency
+        run: npm install
+      - name: Trivy file scan
+        run: trivy fs . > trivyfs.txt
+      - name: Docker Build and push
+        run: |
+          docker build -t candycrush .
+          docker tag candycrush latchudevops/candycrush:latest
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker push latchudevops/candycrush:latest
+        env:
+          DOCKER_CLI_ACI: 1
+```
