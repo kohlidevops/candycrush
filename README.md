@@ -449,3 +449,19 @@ jobs:
       - name: Deploy to kubernetes
         run: kubectl apply -f deployment-service.yml
 ```
+
+Once the workflows updated then jobs automatically triggered. Finally my both build and deploy job has been succeeded.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/024ac929-a951-466e-b29c-5b28cb032f5d)
+
+If i check with Github Action machine using kubectl
+
+```
+kubectl get all
+```
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/513ec8c0-77a4-4a27-9e3f-f622d8400545)
+
+If I check with my loadbalancer URL, I can able to see the candycrush game.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/f0ed4a0b-bd70-4646-889f-b1b653c39d83)
