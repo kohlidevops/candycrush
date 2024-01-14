@@ -324,3 +324,128 @@ jobs:
         env:
           DOCKER_CLI_ACI: 1
 ```
+
+My build has been succeeded.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/7fa45eb7-035e-4e3c-b083-4db18250d2ce)
+
+Docker Image has been pushed to docker registry
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/14db65d6-2d5e-46e8-8b21-d899d923c04d)
+
+### To add a trivy scan to the build job and create a deploy job
+
+To add a trivy scan stage to build job and create one more job as deploy which is going to pull the docker image, scan the image and deploy this image on docker container in Gitub Action machine.
+
+```
+name: To Build, Analyze and Scan
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-analyze-scan:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - name: To Checkout the Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Build and Analyze with Sonarqube
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: NPM install dependency
+        run: npm install
+      - name: Trivy file scan
+        run: trivy fs . > trivyfs.txt
+      - name: Docker Build and push
+        run: |
+          docker build -t candycrush .
+          docker tag candycrush latchudevops/candycrush:latest
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker push latchudevops/candycrush:latest
+        env:
+          DOCKER_CLI_ACI: 1
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimage.txt
+  deploy:
+    needs: build-analyze-scan
+    runs-on: self-hosted
+    steps:
+      - name: docker pull image
+        run: docker pull latchudevops/candycrush:latest
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimagedeploy.txt  
+      - name: Deploy to container
+        run: docker run -d --name game -p 3000:3000 latchudevops/candycrush:latest
+```
+Once update the code then Action can be triggered.
+
+My build job has been succeeded and deploy job too completed.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/af147ab0-9a53-4caa-9126-2716b3b6fa83)
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/e48e5e0a-b6db-482b-9eef-d3113607ced9)
+
+My reactapp has been deployed in container.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/f0d3eb71-6bff-4ce4-b6f5-498df641ff58)
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/6870a53c-0211-44d4-9b82-4559ab92b286)
+
+### Deploy to EKS Cluster
+
+To add a EKS stage in to deploy jobs and commit the changes
+
+```
+name: To Build, Analyze and Scan
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-analyze-scan:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - name: To Checkout the Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Build and Analyze with Sonarqube
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      - name: NPM install dependency
+        run: npm install
+      - name: Trivy file scan
+        run: trivy fs . > trivyfs.txt
+      - name: Docker Build and push
+        run: |
+          docker build -t candycrush .
+          docker tag candycrush latchudevops/candycrush:latest
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+          docker push latchudevops/candycrush:latest
+        env:
+          DOCKER_CLI_ACI: 1
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimage.txt
+  deploy:
+    needs: build-analyze-scan
+    runs-on: self-hosted
+    steps:
+      - name: docker pull image
+        run: docker pull latchudevops/candycrush:latest
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimagedeploy.txt  
+      - name: Deploy to container
+        run: docker run -d --name game -p 3000:3000 latchudevops/candycrush:latest
+      - name: Update kubeconfig
+        run: aws eks --region ap-south-1 update-kubeconfig --name EKS_CLOUD
+      - name: Deploy to kubernetes
+        run: kubectl apply -f deployment-service.yml
+```
