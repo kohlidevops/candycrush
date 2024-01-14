@@ -93,6 +93,148 @@ Settings -> Secrets & Variables -> Actions -> New repository secrets
 
 ![image](https://github.com/kohlidevops/candycrush/assets/100069489/cb9ab460-8b3b-47ae-83d6-9c74a0a2be30)
 
+Now create your Workflow for your Project. In my case, the candycrush project is built using React Js. That’s why I am selecting Other.
 
+Now it Generates and workflow for my Project.
 
+Go back to GitHub. click on Add file and then create a new file
 
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/e9024c6e-84f5-4e5a-92ee-98f60ab2c1c1)
+
+Now, Time to add our workflow in below path of the my repository.
+
+```
+.github/workflows/sonar.yml
+```
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/cf1efe16-9c9c-4133-91e7-2329f81f5b31)
+
+This workflow is triggered on a push to the main branch and contains two steps in "Build" jobs. The first step checks out the code, and the second step uses the SonarQube Scan action to analyze the code using SonarQube.
+
+```
+name: My Build
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+```
+
+Now commit the changes - Then build will start automatically. Before commit the changes, to start the run in EC2 selfhosted runner using below commands.
+
+```
+cd /home/ubuntu/actions-runner
+./run.sh
+```
+
+Once its ready to listening, then it will be succeeded if build has been started.
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/c1e24413-d465-4034-bccf-e1527ed13fcb)
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/23c4d567-4800-4ffa-b63c-d2555b596c2f)
+
+You can see the code analysis in Sonarqube instance
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/4de4d10d-be3b-49b8-b8bd-b52518c12422)
+
+### Install Java
+
+SSH to Github machine and install Java using below commands
+
+```
+sudo apt update -y
+sudo touch /etc/apt/keyrings/adoptium.asc
+sudo wget -O /etc/apt/keyrings/adoptium.asc https://packages.adoptium.net/artifactory/api/gpg/key/public
+echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+sudo apt update -y
+sudo apt install temurin-17-jdk -y
+/usr/bin/java --version
+```
+
+### Install Trivy 
+
+SSH to Github machine and install Trivy to scan images
+
+```
+sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy -y
+trivy -v
+```
+
+### Install Terraform
+
+SSH to Github machine to install terraform using below commands
+
+```
+sudo apt install wget -y
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+terraform -v
+```
+
+### Install Kubectl
+
+SSH to Github machine and install kubectl
+
+```
+sudo apt update
+sudo apt install curl -y
+curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+```
+
+### Install AWSCLI
+
+To install AWSCLI on Github macine
+
+```
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt-get install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+```
+
+### Install NodeJS and NPM
+
+To install nodejs and npm on Github machine using below commands
+
+```
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/nodesource-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/nodesource-archive-keyring.gpg] https://deb.nodesource.com/node_16.x focal main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+sudo apt update
+sudo apt install -y nodejs
+node -v
+npm -v
+```
+
+### To provisioning an EKS Cluster on AWS
+
+To SSH to GIthub machine and clone the below repo and work on it.
+
+##### To change the S3 bucket in backend.tf file
+
+```
+git clone https://github.com/kohlidevops/candycrush.git
+cd /home/ubuntu/candycrush/Eks-terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply --auto-approve
+```
