@@ -41,3 +41,7 @@ jobs:
         run: trivy image latchudevops/candycrush:latest > trivyimagedeploy.txt  
       - name: Deploy to container
         run: docker run -d --name game -p 3000:3000 latchudevops/candycrush:latest
+      - name: Update kubeconfig
+        run: aws eks --region ap-south-1 update-kubeconfig --name EKS_CLOUD
+      - name: Deploy to kubernetes
+        run: kubectl apply -f deployment-service.yml
