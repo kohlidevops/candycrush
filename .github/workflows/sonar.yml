@@ -5,7 +5,7 @@ on:
       - main
 jobs:
   build:
-    name: Build
+    name: build-analyze-scan
     runs-on: self-hosted
     steps:
       - name: To Checkout the Code
@@ -29,3 +29,15 @@ jobs:
           docker push latchudevops/candycrush:latest
         env:
           DOCKER_CLI_ACI: 1
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimage.txt
+  deploy:
+    needs: build-analyze-scan
+    runs-on: self-hosted
+    steps:
+      - name: docker pull image
+        run: docker pull latchudevops/candycrush:latest
+      - name: Image scan
+        run: trivy image latchudevops/candycrush:latest > trivyimagedeploy.txt  
+      - name: Deploy to container
+        run: docker run -d --name game -p 3000:3000 latchudevops/candycrush:latest
