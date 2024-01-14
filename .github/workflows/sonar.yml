@@ -4,8 +4,8 @@ on:
     branches:
       - main
 jobs:
-  build:
-    name: build-analyze-scan
+  build-analyze-scan:
+    name: Build
     runs-on: self-hosted
     steps:
       - name: To Checkout the Code
