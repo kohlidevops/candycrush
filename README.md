@@ -465,3 +465,10 @@ kubectl get all
 If I check with my loadbalancer URL, I can able to see the candycrush game.
 
 ![image](https://github.com/kohlidevops/candycrush/assets/100069489/f0ed4a0b-bd70-4646-889f-b1b653c39d83)
+
+
+#### For slack integration
+
+```
+https://mrcloudbook.com/candycrush-deployment-on-aws-eks-using-github-actions-in-devsecops-pipeline/
+```
