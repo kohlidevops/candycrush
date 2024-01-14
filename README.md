@@ -83,11 +83,16 @@ On the next page click on With GitHub actions
 
 Now, we need to provide SONAR TOKEN & URL to Github Actions.
 
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/3b3c2d70-13aa-4d67-b24d-f1cef644cdbf)
+
 Let’s Open your GitHub and select your Repository.
 
 In my case it is Netflix-clone and Click on Settings
 
 Settings -> Secrets & Variables -> Actions -> New repository secrets
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/cb9ab460-8b3b-47ae-83d6-9c74a0a2be30)
+
 
 
 
