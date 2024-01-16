@@ -1,4 +1,6 @@
-# Github Selfhosted Runner
+# To deploy Application on Amazon Kubernetes Cluster using Github Actions Selfhosted Runner (CICD)
+
+![image](https://github.com/kohlidevops/candycrush/assets/100069489/24a5e276-4093-48f8-a589-290f364da298)
 
 ## Launch ubuntu22 EC2 Instance
 
